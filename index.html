@@ -1,0 +1,1466 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <!-- تحديد الترميز والعرض للشاشات المختلفة -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="بورتفوليو مستشفى الرعاية المستقبلية - رعاية صحية ذكية باستخدام الذكاء الاصطناعي وإنترنت الأشياء">
+    <meta name="keywords" content="مستشفى, رعاية صحية, ذكاء اصطناعي, إنترنت الأشياء, الرياض">
+    <meta name="author" content="Future Care Hospital">
+    <title>بورتفوليو مستشفى الرعاية المستقبلية</title>
+
+    <!-- روابط المكتبات الخارجية -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+
+    <style>
+        /* استيراد الخطوط العربية */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
+        /* تعريف المتغيرات الأساسية للتصميم */
+        :root {
+            /* الألوان الأساسية */
+            --primary: #b0040d;
+            --primary-light: #b0040d;
+            --primary-dark: #b0040d;
+            --primary-ultra-light: rgba(255, 209, 0, 0.1);
+            --primary-ultra-dark: #b0040d;
+            --black: #000000;
+            --black-light: #121212;
+            --black-lighter: #1A1A1A;
+            --black-dark: #080808;
+            --background: #0A0A0A;
+            --background-card: #111111;
+            --background-dark: #070707;
+            --background-darker: #050505;
+            --surface: #1A1A1A;
+            --surface-hover: #222222;
+            --text-primary: #FFFFFF;
+            --text-secondary: #E0E0E0;
+            --text-tertiary: #BBBBBB;
+            --text-muted: #888888;
+
+            /* المؤثرات البصرية */
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.25);
+            --shadow-yellow: 0 10px 20px rgba(255, 209, 0, 0.15);
+            --gradient-yellow: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            --gradient-dark: linear-gradient(135deg, var(--black) 0%, var(--black-light) 100%);
+
+            /* التحولات */
+            --transition-fast: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+            /* الحواف والمسافات */
+            --radius-sm: 4px;
+            --radius: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --space-unit: 8px;
+            --space-xxs: calc(0.25 * var(--space-unit));
+            --space-xs: calc(0.5 * var(--space-unit));
+            --space-sm: calc(0.75 * var(--space-unit));
+            --space: var(--space-unit);
+            --space-md: calc(1.5 * var(--space-unit));
+            --space-lg: calc(2 * var(--space-unit));
+            --space-xl: calc(3 * var(--space-unit));
+            --space-xxl: calc(4 * var(--space-unit));
+        }
+
+        /* إعادة ضبط التنسيقات الافتراضية */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            font-size: 62.5%;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--black);
+        }
+
+        body {
+            font-family: 'Cairo', 'Almarai', 'Tajawal', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 400;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background-color: var(--background);
+            overflow-x: hidden;
+        }
+
+        /* تنسيق العناوين */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 1.5rem;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* نظام التخطيط */
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-xl);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--space-xl);
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-column {
+            flex-direction: column;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .align-center {
+            align-items: center;
+        }
+
+        /* شريط التنقل */
+        .navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            padding: var(--space-md) 0;
+            background-color: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .navbar.scrolled {
+            padding: var(--space) 0;
+            background-color: rgba(8, 8, 8, 0.95);
+            box-shadow: var(--shadow);
+        }
+
+        .navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space);
+        }
+
+        .logo-img {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--black);
+            font-size: 1.8rem;
+        }
+
+        .logo-text {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-lg);
+            list-style: none;
+        }
+
+        .nav-link {
+            position: relative;
+            padding: var(--space-xs) var(--space);
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition-fast);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            font-size: 2.4rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* تنسيق الهيدر */
+        .hero {
+            position: relative;
+            padding: 18rem 0 10rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background-color: var(--background-darker);
+            overflow: hidden;
+        }
+
+        .hero-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.05;
+            background-image: 
+                radial-gradient(circle at 25% 25%, var(--primary) 1%, transparent 7%),
+                radial-gradient(circle at 75% 75%, var(--primary) 1%, transparent 7%),
+                radial-gradient(circle at 50% 50%, var(--primary) 1%, transparent 7%);
+            background-size: 100px 100px;
+            z-index: 1;
+        }
+
+        .hero-bg-gradient {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background: 
+                radial-gradient(ellipse at 90% 20%, rgba(255, 209, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 10% 80%, rgba(255, 209, 0, 0.1) 0%, transparent 50%);
+            z-index: 2;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 5;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--space-xxl);
+            align-items: center;
+        }
+
+        .hero-text {
+            grid-column: 1 / 7;
+            padding: var(--space-xxl) 0;
+        }
+
+        .hero-image {
+            grid-column: 7 / -1;
+            position: relative;
+        }
+
+        .hero-name {
+            display: block;
+            font-size: 6.4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: var(--space-xl);
+            color: var(--text-primary);
+        }
+
+        .hero-title {
+            display: block;
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: var(--space-xl);
+        }
+
+        .hero-description {
+            font-size: 1.8rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xxl);
+            max-width: 90%;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: var(--space-lg);
+            margin-top: var(--space-xxl);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space);
+            padding: var(--space-md) var(--space-xl);
+            font-size: 1.6rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-yellow);
+            opacity: 0;
+            z-index: -1;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--black);
+            box-shadow: var(--shadow-yellow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(255, 209, 0, 0.25);
+        }
+
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 209, 0, 0.15);
+            background-color: var(--primary-ultra-light);
+        }
+
+        .btn i {
+            font-size: 1.8rem;
+        }
+
+        .hero-profile-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 20%;
+        }
+
+        .hero-profile-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        .hero-profile {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--radius-xl);
+            border: 5px solid var(--primary);
+            overflow: hidden;
+            position: relative;
+            box-shadow: var(--shadow-lg), 0 5px 30px rgba(255, 209, 0, 0.2);
+            animation: profilePulse 5s ease-in-out infinite;
+        }
+
+        .hero-profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background-color: var(--black-dark);
+            font-size: 12rem;
+            color: var(--primary);
+        }
+
+        @keyframes profilePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .social-links {
+            display: flex;
+            gap: var(--space);
+            margin-top: var(--space-xl);
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 4.5rem;
+            height: 4.5rem;
+            border-radius: 50%;
+            background-color: var(--surface);
+            color: var(--primary);
+            font-size: 1.8rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .social-link:hover {
+            background-color: var(--primary);
+            color: var(--black);
+            transform: translateY(-8px) rotate(360deg);
+            box-shadow: var(--shadow-yellow);
+        }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space);
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .scroll-down-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .scroll-down-icon {
+            color: var(--primary);
+            font-size: 2.4rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        /* تنسيق الأقسام العامة */
+        .section {
+            padding: 12rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 8rem;
+        }
+
+        .section-subheading {
+            display: inline-block;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: var(--space-lg);
+            padding: var(--space-xs) var(--space-lg);
+            background-color: var(--primary-ultra-light);
+            border-radius: 50px;
+        }
+
+        .section-heading {
+            font-size: 4.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xl);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-heading::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--primary);
+            border-radius: 2px;
+        }
+
+        .section-description {
+            font-size: 1.8rem;
+            color: var(--text-tertiary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* قسم النبذة */
+        .about-content {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--space-xxl);
+            align-items: center;
+        }
+
+        .about-image {
+            grid-column: 1 / 6;
+            position: relative;
+        }
+
+        .about-image-frame {
+            width: 100%;
+            padding-bottom: 120%;
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .about-image-frame img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .about-image-shape {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 20px;
+            left: 20px;
+            border: 5px solid var(--primary);
+            border-radius: var(--radius-lg);
+            z-index: -1;
+        }
+
+        .about-text {
+            grid-column: 6 / -1;
+            padding: var(--space-xl) 0;
+        }
+
+        .about-text h3 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xl);
+            position: relative;
+        }
+
+        .about-text h3::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 0;
+            width: 60px;
+            height: 4px;
+            background-color: var(--primary);
+            border-radius: 2px;
+        }
+
+        .about-text p {
+            font-size: 1.8rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xl);
+            line-height: 1.8;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin: var(--space-xl) 0;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .video-container video {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* قسم الفريق */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        .team-card {
+            background-color: var(--background-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--primary);
+            opacity: 0.7;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(255, 209, 0, 0.1);
+        }
+
+        .team-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto var(--space-lg);
+            border: 3px solid var(--primary);
+        }
+
+        .team-card h3 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: var(--space);
+        }
+
+        .team-card p {
+            font-size: 1.6rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+
+        .certificate-link {
+            color: var(--primary);
+            font-weight: 700;
+            transition: var(--transition);
+        }
+
+        .certificate-link:hover {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        /* قسم المشكلة */
+        .problem-list {
+            list-style: none;
+            padding: var(--space-xl);
+        }
+
+        .problem-item {
+            position: relative;
+            padding-right: calc(var(--space-lg) + var(--space-xs));
+            margin-bottom: var(--space-lg);
+            color: var(--text-secondary);
+            font-size: 1.8rem;
+        }
+
+        .problem-item::before {
+            content: '▹';
+            position: absolute;
+            right: 0;
+            top: 0;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        /* قسم الحل */
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        .solution-card {
+            background-color: var(--background-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .solution-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--primary);
+            opacity: 0.7;
+        }
+
+        .solution-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(255, 209, 0, 0.1);
+        }
+
+        .solution-card h4 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: var(--space);
+        }
+
+        .solution-card p {
+            font-size: 1.6rem;
+            color: var(--text-secondary);
+        }
+
+        /* قسم السوق */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .market-card {
+            background-color: var(--background-card);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .market-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-yellow);
+            border-color: var(--primary-ultra-light);
+        }
+
+        .market-number {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: var(--space);
+        }
+
+        .market-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* قسم الاتصال */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        .contact-item {
+            background-color: var(--background-card);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .contact-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--primary);
+            opacity: 0.7;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(255, 209, 0, 0.1);
+        }
+
+        .contact-item i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: var(--space);
+        }
+
+        .contact-item p {
+            font-size: 1.6rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space);
+        }
+
+        /* تنسيق الفوتر */
+        .footer {
+            padding: 6rem 0;
+            background-color: var(--background-darker);
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 1.6rem;
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-lg);
+        }
+
+        .footer-social-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .footer-copyright {
+            font-size: 1.4rem;
+            color: var(--text-muted);
+        }
+
+        /* تنسيق الـ Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: var(--background-card);
+            margin: 5% auto;
+            padding: var(--space-xl);
+            width: 80%;
+            max-width: 800px;
+            border-radius: var(--radius-lg);
+            position: relative;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-content img {
+            width: 100%;
+            border-radius: var(--radius-md);
+        }
+
+        .close {
+            position: absolute;
+            top: var(--space);
+            right: var(--space-lg);
+            font-size: 3rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close:hover {
+            color: var(--primary);
+        }
+
+        /* تنسيقات إضافية للتجاوب */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 1000px;
+            }
+            .hero-name {
+                font-size: 5rem;
+            }
+            .hero-content {
+                grid-template-columns: 1fr;
+            }
+            .hero-text, .hero-image {
+                grid-column: 1 / -1;
+                text-align: center;
+            }
+            .cta-buttons, .social-links {
+                justify-content: center;
+            }
+            .about-content {
+                grid-template-columns: 1fr;
+            }
+            .about-image, .about-text {
+                grid-column: 1 / -1;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 var(--space-lg);
+            }
+            .navbar-container {
+                flex-wrap: wrap;
+            }
+            .nav-links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+                padding: var(--space-lg) 0;
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .hero {
+                padding: 12rem 0 8rem;
+            }
+            .hero-name {
+                font-size: 3.6rem;
+            }
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            .section {
+                padding: 8rem 0;
+            }
+            .section-heading {
+                font-size: 3.2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .cta-buttons {
+                flex-direction: column;
+            }
+            .hero-profile-wrapper {
+                max-width: 300px;
+            }
+        }
+
+        /* تنسيقات للطباعة */
+        @media print {
+            .navbar, .footer, .modal {
+                display: none;
+            }
+            .section {
+                background: none;
+                border: 1px solid #000;
+            }
+            .team-card img {
+                border: 1px solid #000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- شريط التنقل -->
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <div class="logo">
+                <cless="logo-img" img href="10.jpg"></div>
+
+                <span class="logo-text">مستشفى health sphere</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="nav-link active">الرئيسية</a></li>
+                <li><a href="#about" class="nav-link">نبذة</a></li>
+                <li><a href="#team" class="nav-link">الفريق</a></li>
+                <li><a href="#problem" class="nav-link">المشكلة</a></li>
+                <li><a href="#solution" class="nav-link">الحل</a></li>
+                <li><a href="#market" class="nav-link">السوق</a></li>
+                <li><a href="#contact" class="nav-link">الاتصال</a></li>
+            </ul>
+            <div class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- الهيدر -->
+    <section id="home" class="hero">
+        <div class="hero-pattern"></div>
+        <div class="hero-bg-gradient"></div>
+        <div class="container hero-content">
+            <div class="hero-text animate_animated animate_fadeIn">
+                <span class="hero-name">مستشفى health sphere</span>
+                <span class="hero-title">رعاية صحية ذكية لمستقبل مشرق</span>
+                <p class="hero-description">
+                    منشأة طبية متطورة  تستخدم الربوت وإنترنت الأشياء لتقديم خدمات صحية استثنائية.
+                </p>
+              
+            </div>
+            <div class="hero-image animate_animated animate_fadeIn">
+                <div class="hero-profile-container">
+                    <div class="hero-profile-wrapper">
+                        <div class="hero-profile">
+                            <div class="profile-placeholder">health sphere</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-down">
+            <span class="scroll-down-text">تصفح المزيد</span>
+            <i class="fas fa-chevron-down scroll-down-icon"></i>
+        </div>
+    </section>
+
+    <!-- قسم النبذة -->
+    <section id="about" class="section">
+        <div class="container">
+            <div class="section-header animate_animated animate_fadeIn">
+                <span class="section-subheading">من نحن</span>
+                <h2 class="section-heading">نبذة عن المشروع</h2>
+                <p class="section-description">
+                   فكره المشروع بتتكلم عن ان احنا نسهر على الناس ونقلل الضغط عن المستشفيات بحيث اللي احنا صممنا سيستم كامل مكون من اثنين سيرفر وسويتش لير 3 من شركه سيسكو واللي هو بديل لراوتر وسويتش لوحدهم فهو راوتر وسويتش مضمودين في بعض وصممنا روبوت مكون من حساس يقيس ضربات القلب والاكسجين في الدم وضغط الدم ويقوم بارسالها الى السيستم وهو مربوط بالسيرفر والسيرفر الذي هو مربوط بالموقع والموقع يوفر التحدث مع الطبيب فيديو كول وتقدر انك تحجز وايضا الروبوت يبعت بياناتك المرضيه وهي نسبه الاكسجين والضغط وضربات القلب الى الموقع وتذهب الى الطبيب في نفس الوقت فتستطيع ان تقوم باستشاره طبيه كامله من بيتك وتستطيع ان تحجز ايضا من بيتك فيخفف ضغط المرضى عن المستشفيات ويخفف عن المرضى فاذا كان مريض لا يستطيع ان يذهب الى المستشفى في هذا المشروع يبسط هذا الامر للمريض ويستطيع ان يقوم باستشاره طبيه كامله مع الطبيب من بيته فقط
+                </p>
+            </div>
+            
+                <div class="about-text">
+                    <h3>مستشفى health sphere</h3>
+                    <p>
+                    شكل السيستم الحقيق
+                    </p>
+                    <div class="video-container">
+                        <video controls>
+                            <source src="60.mp4" type="video/mp4">
+                          
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+     <div class="about-text">
+                    <h3>مستشفى health sphere</h3>
+                    <p>
+                    ربوت التحليل لكيس ضغط الدم ضربات القلب والاكسجين في الدم
+                    </p>
+                    <div class="video-container">
+                        <video controls>
+                            <source src="70.mp4" type="video/mp4">
+                          
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+      
+
+    <!-- قسم الفريق -->
+    <section id="team" class="section">
+        <div class="container">
+            <div class="section-header animate_animated animate_fadeIn">
+                <span class="section-subheading">فريقنا</span>
+                <h2 class="section-heading">فريق العمل</h2>
+                <p class="section-description">
+                    فريق من المحترفين ذوي الخبرة في المجالات الطبية والتكنولوجية.
+                </p>
+            </div>
+            <div class="team-grid animate_animated animate_fadeInUp">
+                <div class="team-card">
+                    <img src="2.jpg" alt="بشمهندس : عمر عمرو">
+                    <h3>م. عمر عمرو</h3>
+                    <p>انا الطالب : عمر عمرو عندي 15 سنه مهندس IT وبرمجه معيا عداد من لغات البرمجه وهي
+1. c++
+ودي انا بستعمله لبرمجات الربوتات فا لغه دي قوي دا في الروبوتات و تنفيز الاومر 
+2. html
+ودي عبار عن جسم الموقع الالكتروني 
+3. css
+ودي عشان شكل الموقع الالكتروني والتصميم بتعو
+4. javascript
+ودي اللي بتدي روح لالموقع الالكتروني و حرق 
+5. sql
+ودي البنيه التحتيه وتخزين بيانات العملاء وهي ال database
+بحكم ان انا مهندس شبكات و سيرفرات عملت سيرفرا sql 
+من الاتنين سيرفرا اللي في الشبكه وبكد يكون التصمم مطربت ومتكامل وده اللي انا عملتو في مشروع health sphere</p>
+                    <a href="#" class="certificate-link" data-cert="11.jpg">عرض الشهادة</a>
+                </div>
+                <div class="team-card">
+                    <img src="1.jpg" alt="بشمهندس : زياد فرج">
+                    <h3>م. زياد فرج</h3>
+                    <p>زياد فرج يحي 
+17 سنه
+طالب في الثانويه المصريه للتلمذه 
+قسم صيانه حاسب آلي وشبكات 
+كلي اللي درسته ف المدرسه طبقته ف المدرسه يعتبر كا سيستم شبكه وربط اجهزه لكن مليش خبره من ناحيه شغل خارجي 
+وفي المشروع ده اشتغلت انا وصديق ليا اسمه محمد صلاح 
+قومنا بتمثيل سيستم شبكه وهمي علي برنامج cisco packet tracer عشان نمثل الشبكه اللي المفروض نعملها ف الواقع 
+وفي الواقع عملنا سيرفرين مع سويتش وجهاز عن بعد عشان نمثل الشبكه الوهميه اللي عملنها علي برنامج Cisco packet tracer 
+وبس ده كان بالنسبا ليا الطالب : زياد فرج يحي</p>
+                    <a href="#" class="certificate-link" data-cert="22.jpg">عرض الشهادة</a>
+                </div>
+                <!-- أضفت أعضاء إضافيين لزيادة المحتوى -->
+                <div class="team-card">
+                    <img src="3.jpg" alt="بشمهندس : سليم وائل">
+                    <h3>م. سليم وائل</h3>
+                    <p>نا الطالب سليم وائل طالب الصف التالت الثنوي قسم اجهزا طبيه والالكترونيات 
+سني ١٩سنه 
+اشتغلت ف مستشفي البرج ف الدقي 
+و مركز صيانه يونتات اسنان ف حلوان وكان شغلي في المشروع تجمعي الربوت وتصميم التوصيل و اخطير المكونات المطلوب لهذه المشروع</p>
+                </div>
+                <div class="team-card">
+                    <img src="5.jpg" alt="لينا خالد">
+                    <h3>م. محمد صلاح</h3>
+                    <p>محمد صلاح محمد
+17 سنه
+طالب في الثانويه المصريه للتلمذه 
+قسم صيانه حاسب آلي وشبكات 
+كلي اللي درسته ف المدرسه طبقته ف المدرسه يعتبر كا سيستم شبكه وربط اجهزه لكن مليش خبره من ناحيه شغل خارجي 
+وفي المشروع ده اشتغلت انا وصديق ليا اسمه  زياد فرج يحي 
+قومنا بتمثيل سيستم شبكه وهمي علي برنامج cisco packet tracer عشان نمثل الشبكه اللي المفروض نعملها ف الواقع
+وفي الواقع عملنا سيرفرين مع سويتش وجهاز عن بعد عشان نمثل الشبكه الوهميه اللي عملنها علي برنامج Cisco packet tracer 
+وبس ده كان بالنسبا ليا الطالب : محمد صلاح محمد</p>
+                </div>
+                <div class="team-card">
+                    <img src="4.jpg" alt="بشمهندسه : سلمي سامي">
+                    <h3>م. سلمي سامي</h3>
+                    <p>سلمي سامي عندي 16 سنه في اولي ثانوي 
+بشتغل جرافك دزينر و فتحه بزنس اونلاين ببيع عليه اكسسورات و شغاله ف ماركت  و كنت من ضمن الجروب الي نفذ مشروع Health sphere و كان دوري عمل الدزينات الخاصه بالويب سايت و الابلكيشن و كمان عملت برزنتيشن يشرح المشروع</p>
+                </div>
+                <div class="team-card">
+                    <img src="https://via.placeholder.com/150?text=Reem" alt="ريم عبدالله">
+                    <h3>م. جني</h3>
+                    <p>الدراسه جرافيك ديزاين وماركتينج الخبره لمده سنه شغل تسويق ل لوكل براند وفري لانسر تصميمات للوكل براند ومطاعم وكافيهات 
+بخلص كورس انجلش ف AUC وكورس رياده اعمال ف موقع  كورسيرا 
+التخصص فالبروجيكت marketing 
+Ui design</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- قسم المشكلة -->
+    <section id="problem" class="section">
+        <div class="container">
+            <div class="section-header animate_animated animate_fadeIn">
+                <span class="section-subheading">التحديات</span>
+                <h2 class="section-heading">المشكلة التي يعالجها المشروع</h2>
+                <p class="section-description">
+                    تحديات الرعاية الصحية التقليدية التي نواجهها.
+                </p>
+            </div>
+            <ul class="problem-list animate_animated animate_fadeInUp">
+                <li class="problem-item">تسهيل علي المرضيه</li>
+                <li class="problem-item">تخفيف ضغط المرضه عن المستشفي</li>
+                <li class="problem-item">تمكين استشاره طبيه كماله من البيت والتحدث مع الطبيب من خلال الموقع</li>
+                <li class="problem-item">تمكين التحليل من البيت و ارسلها الي الطبيب عبر الروبوت و الموقع </li>
+               
+            </ul>
+        </div>
+    </section>
+
+    <!-- قسم الحل -->
+    <section id="solution" class="section">
+        <div class="container">
+            <div class="section-header animate_animated animate_fadeIn">
+                <span class="section-subheading">حلولنا</span>
+                <h2 class="section-heading">الحل المقترح</h2>
+                <p class="section-description">
+                    حلول مبتكرة لتحسين الرعاية الصحية باستخدام التكنولوجيا.
+                </p>
+            </div>
+            <div class="solution-grid animate_animated animate_fadeInUp">
+               
+                <div class="solution-card">
+                    <h4>نظام إدارة رقمي</h4>
+                    <p>نظام متكامل لإدارة المرضى والمواعيد لتقليل أوقات الانتظار.</p>
+                </div>
+                <div class="solution-card">
+                    <h4>غرف ذكية</h4>
+                    <p>غرف مجهزة بإنترنت الأشياء لمراقبة حالة المريض في الوقت الفعلي.</p>
+                </div>
+                <div class="solution-card">
+                    <h4>تطبيق المريض</h4>
+                    <p>تطبيق جوال لتتبع العلاج وتحديد المواعيد وتلقي الإشعارات.</p>
+                </div>
+                <div class="solution-card">
+                    <h4>تحليلات بيانات متقدمة</h4>
+                    <p>استخدام البيانات الضخمة لتحسين اتخاذ القرارات الطبية.</p>
+                </div>
+                <div class="solution-card">
+                    <h4>خدمات عن بُعد</h4>
+                    <p>توفير استشارات طبية عبر الإنترنت لتسهيل الوصول إلى الخدمات.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- قسم السوق -->
+    <section id="market" class="section">
+        <div class="container">
+            <div class="section-header animate_animated animate_fadeIn">
+                <span class="section-subheading">السوق</span>
+                <h2 class="section-heading">السوق المستهدف</h2>
+                <p class="section-description">
+                    إحصائيات السوق المستهدف لمستشفى الرعاية المستقبلية.
+                </p>
+            </div>
+            <div class="market-grid animate_animated animate_fadeInUp">
+                <div class="market-card">
+                    <span class="market-number">200,000+</span>
+                    <span class="market-title">مريض سنوي متوقع</span>
+                </div>
+                <div class="market-card">
+                    <span class="market-number">50%</span>
+                    <span class="market-title">نسبة السوق المحلي</span>
+                </div>
+                <div class="market-card">
+                    <span class="market-number">10,000</span>
+                    <span class="market-title">زيارة شهرية</span>
+                </div>
+                <div class="market-card">
+                    <span class="market-number">5</span>
+                    <span class="market-title">دول مستهدفة</span>
+                </div>
+                <div class="market-card">
+                    <span class="market-number">75%</span>
+                    <span class="market-title">نسبة رضا العملاء</span>
+                </div>
+                <div class="market-card">
+                    <span class="market-number">20+</span>
+                    <span class="market-title">تخصصات طبية</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- قسم الاتصال -->
+    <section id="contact" class="section">
+        <div class="container">
+            <div class="section-header animate_animated animate_fadeIn">
+                <span class="section-subheading">تواصل معنا</span>
+                <h2 class="section-heading">اتصل بنا</h2>
+                <p class="section-description">
+                    تواصلوا معنا للحصول على مزيد من المعلومات أو لتحديد موعد.
+                </p>
+            </div>
+            <div class="contact-grid animate_animated animate_fadeInUp">
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <p>01011911783</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <p>salmasamy722000@icloud.com</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+            <p>القاهر</p>
+                </div>
+           
+        </div>
+    </section>
+
+    <!-- الفوتر -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">مستشفى الرعاية المستقبلية - نقدم الرعاية بذكاء</p>
+            
+            <p class="footer-copyright">جميع الحقوق محفوظة © 2025 مستشفى الرعاية المستقبلية</p>
+        </div>
+    </footer>
+
+    <!-- Modal لعرض الشهادات -->
+    <div id="certificateModal" class="modal">
+        <div class="modal-content">
+            <span class="close">×</span>
+            <img id="certificateImage" src="" alt="شهادة">
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        const modal = document.getElementById('certificateModal');
+        const certificateImage = document.getElementById('certificateImage');
+        const closeModal = document.querySelector('.close');
+        const certificateLinks = document.querySelectorAll('.certificate-link');
+
+        certificateLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const certUrl = link.getAttribute('data-cert');
+                certificateImage.src = certUrl;
+                modal.style.display = 'block';
+            });
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+            certificateImage.src = '';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                certificateImage.src = '';
+            }
+        });
+
+        // Mobile menu toggle
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Smooth scroll with GSAP
+        document.querySelectorAll('.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                gsap.to(window, {
+                    scrollTo: targetElement,
+                    duration: 1,
+                    ease: 'power2.out'
+                });
+                navLinks.classList.remove('active');
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // GSAP animations for sections
+        gsap.utils.toArray('.section').forEach(section => {
+            gsap.from(section, {
+                opacity: 0,
+                y: 100,
+                duration: 1,
+                ease: 'power2.out',
+                scrollTrigger: {
+                    trigger: section,
+                    start: 'top 80%',
+                    toggleActions: 'play none none none'
+                }
+            });
+        });
+    </script>
+</body>
+</html>
